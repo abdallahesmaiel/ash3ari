@@ -14,7 +14,7 @@
             box-sizing: border-box;
         }
         
-         :root {
+        :root {
             --primary: #8B4513;
             --primary-dark: #6B3410;
             --secondary: #D4A574;
@@ -146,12 +146,13 @@
             background: var(--gradient-1);
             color: white;
             text-align: center;
+            position: relative;
         }
         
         .side-menu-close {
             position: absolute;
             top: 15px;
-            right: 15px;
+            left: 15px;
             background: none;
             border: none;
             color: white;
@@ -314,6 +315,8 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
         
         .submit-btn:hover {
@@ -324,6 +327,28 @@
         .submit-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+        
+        .submit-btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+            background: var(--primary-dark);
+        }
+        
+        .submit-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
         
         .status-card {
@@ -381,48 +406,13 @@
         .nav-item i {
             font-size: 20px;
         }
-        .submit-btn {
-    position: relative;
-    overflow: hidden;
-}
-
-.submit-btn.loading {
-    pointer-events: none;
-    opacity: 0.8;
-    background: var(--primary-dark);
-}
-
-.submit-btn.loading::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-.submit-btn .fa-spinner {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-    }
     </style>
 </head>
 
 <body>
     <div class="top-bar">
         <div class="user-area">
-            <button class="menu-btn" onclick="toggleMenu()">
+            <button class="menu-btn" onclick="window.toggleMenu()">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -439,10 +429,10 @@
         <div class="user-mini" id="userMini"></div>
     </div>
 
-    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="closeMenu()"></div>
+    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="window.closeMenu()"></div>
     <div class="side-menu" id="sideMenu">
         <div class="side-menu-header">
-            <button class="side-menu-close" onclick="closeMenu()">
+            <button class="side-menu-close" onclick="window.closeMenu()">
                 <i class="fas fa-times"></i>
             </button>
             <h2>أشعاري</h2>
@@ -488,10 +478,10 @@
 
             <div class="form-group">
                 <label>صورة إثبات الهوية</label>
-              <div class="file-upload" onclick="window.triggerFileUpload()">
+                <div class="file-upload" onclick="document.getElementById('idImage').click()">
                     <i class="fas fa-id-card"></i>
                     <p>اضغط لرفع صورة الهوية</p>
-                    <input type="file" id="idImage" accept="image/*" onchange="previewIdImage(this)">
+                    <input type="file" id="idImage" accept="image/*" onchange="window.previewIdImage(this)">
                 </div>
                 <img id="idPreview" class="preview-image">
             </div>
@@ -534,7 +524,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // تهيئة Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
             authDomain: "pump-station-system.firebaseapp.com",
@@ -548,326 +537,216 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
-    </script>
+        console.log('Verification - Firebase ready');
 
-    <script>
-    let currentUser = null;
-    let currentRequest = null;
+        let currentUser = null;
+        let currentRequest = null;
 
-    auth.onAuthStateChanged(async function(user) {
-        if (user) {
-            // ✅ تعيين currentUser مرة واحدة فقط
-            currentUser = {
-                uid: user.uid,
-                email: user.email,
-                username: 'مستخدم',
-                profileImage: '',
-                verified: false
-            };
+        auth.onAuthStateChanged(async function(user) {
+            if (user) {
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    username: 'مستخدم',
+                    profileImage: '',
+                    verified: false
+                };
 
-            try {
-                const snapshot = await database.ref('users/' + user.uid).once('value');
-                if (snapshot.exists()) {
-                    const userData = snapshot.val();
-                    // ✅ تعيين مباشر بدون spread operator
-                    currentUser.uid = user.uid;
-                    currentUser.email = user.email;
-                    currentUser.username = userData.username || 'مستخدم';
-                    currentUser.profileImage = userData.profileImage || '';
-                    currentUser.verified = userData.verified || false;
+                try {
+                    const snapshot = await database.ref('users/' + user.uid).once('value');
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        currentUser.uid = user.uid;
+                        currentUser.email = user.email;
+                        currentUser.username = userData.username || 'مستخدم';
+                        currentUser.profileImage = userData.profileImage || '';
+                        currentUser.verified = userData.verified || false;
+                    }
+                } catch (error) {
+                    console.error('Error loading user:', error);
                 }
-            } catch (error) {
-                console.error('Error loading user:', error);
-                currentUser.uid = user.uid;
-                currentUser.email = user.email;
-            }
 
-            // ✅ حفظ في localStorage للتأكد
-            try {
-                localStorage.setItem('currentUser', JSON.stringify({
-                    uid: currentUser.uid,
-                    email: currentUser.email,
-                    username: currentUser.username,
-                    verified: currentUser.verified
-                }));
-            } catch(e) {}
+                try {
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        username: currentUser.username,
+                        verified: currentUser.verified
+                    }));
+                } catch(e) {}
 
-            displayUserInfo();
-            checkVerificationStatus();
-        } else {
-            window.location.href = 'index.html';
-        }
-    });
-
-    function displayUserInfo() {
-        const userMini = document.getElementById('userMini');
-        const defaultImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAzNSAzNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iMTcuNSIgZmlsbD0iI0Q0QTU3NCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkNhaXJvIj7Yudio2YrYsTwvdGV4dD48L3N2Zz4=';
-
-        if (currentUser) {
-            userMini.innerHTML = `
-                <img src="${currentUser.profileImage || defaultImg}" alt="User" onerror="this.src='${defaultImg}'">
-                <span>${currentUser.username || 'مستخدم'}</span>
-            `;
-        }
-    }
-
-    // ✅ القائمة المنسدلة
-    window.toggleMenu = function() {
-        document.getElementById('sideMenu').classList.toggle('active');
-        document.getElementById('sideMenuOverlay').classList.toggle('active');
-    };
-
-    window.closeMenu = function() {
-        document.getElementById('sideMenu').classList.remove('active');
-        document.getElementById('sideMenuOverlay').classList.remove('active');
-    };
-
-    // ✅ معاينة صورة الهوية - تم إصلاح مشكلة مرتين
-    window.previewIdImage = function(input) {
-        const preview = document.getElementById('idPreview');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    };
-
-    // ✅ رفع الصورة عند الضغط على الـ div
-    window.triggerFileUpload = function() {
-        document.getElementById('idImage').click();
-    };
-
-    function checkVerificationStatus() {
-        if (!currentUser || !currentUser.uid) return;
-        
-        if (currentUser.verified) {
-            showVerifiedStatus();
-            return;
-        }
-
-        database.ref('verificationRequests/' + currentUser.uid).on('value', function(snapshot) {
-            if (snapshot.exists()) {
-                currentRequest = snapshot.val();
-
-                if (currentRequest.status === 'pending') {
-                    showPendingStatus();
-                } else if (currentRequest.status === 'approved') {
-                    showApprovedStatus();
-                } else if (currentRequest.status === 'rejected') {
-                    showRejectedStatus(currentRequest.rejectReason || currentRequest.reason, currentRequest.rejectedAt);
-                }
+                displayUserInfo();
+                checkVerificationStatus();
             } else {
-                showForm();
+                window.location.href = 'index.html';
             }
         });
-    }
 
-    function showForm() {
-        document.getElementById('verificationForm').style.display = 'block';
-        document.getElementById('verificationStatus').style.display = 'none';
-    }
+        function displayUserInfo() {
+            const userMini = document.getElementById('userMini');
+            const defaultImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAzNSAzNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iMTcuNSIgZmlsbD0iI0Q0QTU3NCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkNhaXJvIj7Yudio2YrYsTwvdGV4dD48L3N2Zz4=';
 
-    function showPendingStatus() {
-        document.getElementById('verificationForm').style.display = 'none';
-        document.getElementById('verificationStatus').style.display = 'block';
-        document.getElementById('verificationStatus').innerHTML = `
-            <div class="status-card">
-                <i class="fas fa-clock" style="color: #f59e0b; font-size: 40px;"></i>
-                <h3 style="color: #92400e;">جاري مراجعة الطلب</h3>
-                <p style="color: #92400e;">طلبك قيد المراجعة من قبل الإدارة</p>
-            </div>
-        `;
-    }
+            if (currentUser) {
+                userMini.innerHTML = '<img src="'+(currentUser.profileImage || defaultImg)+'" alt="User" style="width:35px;height:35px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);"><span>'+(currentUser.username || 'مستخدم')+'</span>';
+            }
+        }
 
-    function showApprovedStatus() {
-        document.getElementById('verificationForm').style.display = 'none';
-        document.getElementById('verificationStatus').style.display = 'block';
-        document.getElementById('verificationStatus').innerHTML = `
-            <div class="status-card approved">
-                <i class="fas fa-check-circle" style="color: var(--green); font-size: 40px;"></i>
-                <h3 style="color: #065f46;">تم توثيق الحساب</h3>
-                <p style="color: #065f46;">العلامة الزرقاء ستظهر بجانب اسمك</p>
-            </div>
-        `;
-    }
+        window.toggleMenu = function() {
+            document.getElementById('sideMenu').classList.toggle('active');
+            document.getElementById('sideMenuOverlay').classList.toggle('active');
+        };
 
-    function showRejectedStatus(reason, rejectedAt) {
-        document.getElementById('verificationForm').style.display = 'none';
-        document.getElementById('verificationStatus').style.display = 'block';
+        window.closeMenu = function() {
+            document.getElementById('sideMenu').classList.remove('active');
+            document.getElementById('sideMenuOverlay').classList.remove('active');
+        };
 
-        if (rejectedAt) {
-            const timeSinceRejection = new Date() - new Date(rejectedAt);
-            const twelveHours = 12 * 60 * 60 * 1000;
+        window.previewIdImage = function(input) {
+            const preview = document.getElementById('idPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
 
-            if (timeSinceRejection > twelveHours) {
-                database.ref('verificationRequests/' + currentUser.uid).remove();
-                showForm();
+        function checkVerificationStatus() {
+            if (!currentUser || !currentUser.uid) return;
+            if (currentUser.verified) { showVerifiedStatus(); return; }
+
+            database.ref('verificationRequests/' + currentUser.uid).on('value', function(snapshot) {
+                if (snapshot.exists()) {
+                    currentRequest = snapshot.val();
+                    if (currentRequest.status === 'pending') showPendingStatus();
+                    else if (currentRequest.status === 'approved') showApprovedStatus();
+                    else if (currentRequest.status === 'rejected') showRejectedStatus(currentRequest.rejectReason || currentRequest.reason, currentRequest.rejectedAt);
+                } else { showForm(); }
+            });
+        }
+
+        function showForm() {
+            document.getElementById('verificationForm').style.display = 'block';
+            document.getElementById('verificationStatus').style.display = 'none';
+        }
+
+        function showPendingStatus() {
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('verificationStatus').style.display = 'block';
+            document.getElementById('verificationStatus').innerHTML = '<div class="status-card"><i class="fas fa-clock" style="color:#f59e0b;font-size:40px;"></i><h3 style="color:#92400e;">جاري مراجعة الطلب</h3><p style="color:#92400e;">طلبك قيد المراجعة من قبل الإدارة</p></div>';
+        }
+
+        function showApprovedStatus() {
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('verificationStatus').style.display = 'block';
+            document.getElementById('verificationStatus').innerHTML = '<div class="status-card approved"><i class="fas fa-check-circle" style="color:var(--green);font-size:40px;"></i><h3 style="color:#065f46;">تم توثيق الحساب</h3><p style="color:#065f46;">العلامة الزرقاء ستظهر بجانب اسمك</p></div>';
+        }
+
+        function showRejectedStatus(reason, rejectedAt) {
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('verificationStatus').style.display = 'block';
+            if (rejectedAt) {
+                const timeSinceRejection = new Date() - new Date(rejectedAt);
+                const twelveHours = 12 * 60 * 60 * 1000;
+                if (timeSinceRejection > twelveHours) {
+                    database.ref('verificationRequests/' + currentUser.uid).remove();
+                    showForm(); return;
+                }
+                const hoursLeft = Math.ceil((twelveHours - timeSinceRejection) / (60 * 60 * 1000));
+                document.getElementById('verificationStatus').innerHTML = '<div class="status-card rejected"><i class="fas fa-times-circle" style="color:var(--red);font-size:40px;"></i><h3 style="color:#991b1b;">تم رفض الطلب</h3><p style="color:#991b1b;">سبب الرفض: '+(reason||'غير محدد')+'</p><p style="color:#991b1b;font-size:13px;">يمكنك إعادة التقديم بعد '+hoursLeft+' ساعة</p></div>';
+            }
+        }
+
+        function showVerifiedStatus() {
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('verificationStatus').style.display = 'block';
+            document.getElementById('verificationStatus').innerHTML = '<div class="status-card approved"><i class="fas fa-check-circle" style="color:var(--green);font-size:40px;"></i><h3 style="color:#065f46;">حساب موثق</h3><p style="color:#065f46;">حسابك موثق بالفعل</p></div>';
+        }
+
+        window.submitVerification = async function() {
+            const idImageInput = document.getElementById('idImage');
+            const notes = document.getElementById('notes').value.trim();
+            const submitBtn = document.querySelector('.submit-btn');
+
+            if (!idImageInput.files || !idImageInput.files[0]) {
+                alert('يرجى رفع صورة إثبات الهوية');
                 return;
             }
 
-            const hoursLeft = Math.ceil((twelveHours - timeSinceRejection) / (60 * 60 * 1000));
+            if (!currentUser || !currentUser.uid) {
+                alert('بيانات المستخدم غير مكتملة. يرجى إعادة تسجيل الدخول.');
+                return;
+            }
 
-            document.getElementById('verificationStatus').innerHTML = `
-                <div class="status-card rejected">
-                    <i class="fas fa-times-circle" style="color: var(--red); font-size: 40px;"></i>
-                    <h3 style="color: #991b1b;">تم رفض الطلب</h3>
-                    <p style="color: #991b1b;">سبب الرفض: ${reason || 'غير محدد'}</p>
-                    <p style="color: #991b1b; font-size: 13px;">يمكنك إعادة التقديم بعد ${hoursLeft} ساعة</p>
-                </div>
-            `;
-        }
-    }
-
-    function showVerifiedStatus() {
-        document.getElementById('verificationForm').style.display = 'none';
-        document.getElementById('verificationStatus').style.display = 'block';
-        document.getElementById('verificationStatus').innerHTML = `
-            <div class="status-card approved">
-                <i class="fas fa-check-circle" style="color: var(--green); font-size: 40px;"></i>
-                <h3 style="color: #065f46;">حساب موثق</h3>
-                <p style="color: #065f46;">حسابك موثق بالفعل</p>
-            </div>
-        `;
-    }
-
-    // ✅ إرسال طلب التوثيق - تم إصلاحه
-    // ✅ إرسال طلب التوثيق - تم إصلاح مشكلة قراءة الصورة
-window.submitVerification = async function() {
-    const idImageInput = document.getElementById('idImage');
-    const notes = document.getElementById('notes').value.trim();
-    const submitBtn = document.querySelector('.submit-btn');
-
-    console.log('submitVerification called');
-    console.log('currentUser:', currentUser ? currentUser.uid : 'null');
-    console.log('files:', idImageInput.files ? idImageInput.files.length : 'no files');
-
-    if (!idImageInput.files || !idImageInput.files[0]) {
-        alert('يرجى رفع صورة إثبات الهوية');
-        return;
-    }
-
-    if (!currentUser) {
-        alert('لم يتم تحميل بيانات المستخدم بعد. حاول مرة أخرى.');
-        return;
-    }
-    
-    if (!currentUser.uid) {
-        alert('بيانات المستخدم غير مكتملة. يرجى إعادة تسجيل الدخول.');
-        return;
-    }
-
-    const file = idImageInput.files[0];
-    
-    // ✅ التحقق من حجم الصورة (أقصى حد 5 ميجابايت)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-        alert('حجم الصورة كبير جداً. يرجى اختيار صورة أقل من 5 ميجابايت.');
-        return;
-    }
-    
-    // ✅ التحقق من نوع الملف
-    if (!file.type.startsWith('image/')) {
-        alert('يرجى اختيار ملف صورة صالح.');
-        return;
-    }
-
-    // ✅ تفعيل حالة التحميل
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.classList.add('loading');
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
-    }
-
-    try {
-        // ✅ قراءة الصورة مع معالجة الأخطاء
-        const imageBase64 = await new Promise(function(resolve, reject) {
-            const reader = new FileReader();
+            const file = idImageInput.files[0];
             
-            reader.onload = function(e) {
-                resolve(e.target.result);
-            };
-            
-            reader.onerror = function(e) {
-                reject(new Error('فشل في قراءة الصورة'));
-            };
-            
-            reader.onabort = function() {
-                reject(new Error('تم إلغاء قراءة الصورة'));
-            };
-            
-            // ✅ استخدام readAsDataURL مع timeout
-            reader.readAsDataURL(file);
-            
-            // ✅ Timeout احتياطي (30 ثانية)
-            setTimeout(function() {
-                if (reader.readyState !== 2) { // DONE
-                    reader.abort();
-                    reject(new Error('انتهت مهلة قراءة الصورة'));
+            if (file.size > 5 * 1024 * 1024) {
+                alert('حجم الصورة كبير جداً. يرجى اختيار صورة أقل من 5 ميجابايت.');
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('loading');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+            }
+
+            try {
+                const imageBase64 = await new Promise(function(resolve, reject) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) { resolve(e.target.result); };
+                    reader.onerror = function() { reject(new Error('فشل في قراءة الصورة')); };
+                    reader.readAsDataURL(file);
+                });
+
+                const requestData = {
+                    userId: currentUser.uid,
+                    username: currentUser.username || 'مستخدم',
+                    userImage: currentUser.profileImage || '',
+                    idImage: imageBase64,
+                    notes: notes,
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                await database.ref('verificationRequests/' + currentUser.uid).set(requestData);
+
+                await database.ref('adminNotifications/' + Date.now()).set({
+                    type: 'verification_request',
+                    userId: currentUser.uid,
+                    username: currentUser.username,
+                    message: 'طلب توثيق جديد من ' + currentUser.username,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+
+                showPendingStatus();
+                alert('تم إرسال طلب التوثيق بنجاح!');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('حدث خطأ: ' + error.message);
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('loading');
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
                 }
-            }, 30000);
-        });
-
-        console.log('Image loaded successfully, size:', imageBase64.length);
-
-        const requestData = {
-            userId: currentUser.uid,
-            username: currentUser.username || 'مستخدم',
-            userImage: currentUser.profileImage || '',
-            idImage: imageBase64,
-            notes: notes,
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            }
         };
 
-        console.log('Saving request...');
-        await database.ref('verificationRequests/' + currentUser.uid).set(requestData);
-        console.log('Request saved successfully');
+        window.logout = function() {
+            auth.signOut().then(function() {
+                localStorage.removeItem('currentUser');
+                window.location.href = '../index.html';
+            }).catch(function(error) {
+                console.error('Logout error:', error);
+            });
+        };
 
-        // إشعار للمدير
-        const adminNotifKey = Date.now().toString();
-        await database.ref('adminNotifications/' + adminNotifKey).set({
-            type: 'verification_request',
-            userId: currentUser.uid,
-            username: currentUser.username,
-            message: 'طلب توثيق جديد من ' + currentUser.username,
-            read: false,
-            createdAt: new Date().toISOString()
-        });
-
-        showPendingStatus();
-        alert('تم إرسال طلب التوثيق بنجاح!');
-
-    } catch (error) {
-        console.error('Error:', error);
-        alert('حدث خطأ: ' + error.message);
-
-        // إعادة الزر لحالته الطبيعية
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('loading');
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
-        }
-    }
-};
-
-        reader.readAsDataURL(file);
-    };
-
-    // ✅ تسجيل الخروج
-    window.logout = function() {
-        auth.signOut().then(function() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
-        }).catch(function(error) {
-            console.error('Logout error:', error);
-        });
-    };
-
-    console.log('Verification - All functions loaded');
+        console.log('Verification - All functions loaded');
     </script>
 </body>
 
