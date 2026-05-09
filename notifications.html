@@ -338,7 +338,7 @@
 <body>
     <div class="top-bar">
         <div class="user-area">
-            <button class="menu-btn" onclick="toggleMenu()">
+            <button class="menu-btn" onclick="window.toggleMenu()">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -355,10 +355,10 @@
         <div class="user-mini" id="userMini"></div>
     </div>
 
-    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="closeMenu()"></div>
+    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="window.closeMenu()"></div>
     <div class="side-menu" id="sideMenu">
         <div class="side-menu-header">
-            <button class="side-menu-close" onclick="closeMenu()">
+           <button class="side-menu-close" onclick="window.closeMenu()">
                 <i class="fas fa-times"></i>
             </button>
             <h2>أشعاري</h2>
@@ -385,7 +385,8 @@
                 <i class="fas fa-user"></i>
                 <span>الملف الشخصي</span>
             </a>
-            <a href="#" class="side-menu-item logout" onclick="logout()">
+            <a href="#" class="side-menu-item logout" onclick="window.logout()">
+
                 <i class="fas fa-sign-out-alt"></i>
                 <span>تسجيل الخروج</span>
             </a>
@@ -417,13 +418,12 @@
         </a>
     </div>
 
-    <!-- Firebase Scripts -->
+      <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
-        // تهيئة Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
             authDomain: "pump-station-system.firebaseapp.com",
@@ -435,203 +435,128 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-
-        console.log('Notifications - Firebase initialized');
+        const auth = firebase.auth();          // ✅ تأكد من هذا
+        const database = firebase.database();   // ✅ وهذا
+        console.log('Notifications - Firebase ready');
 
         let currentUser = null;
 
-        // التحقق من تسجيل الدخول
+        // ✅ استخدام auth مباشرة
         auth.onAuthStateChanged(async function(user) {
             if (user) {
-                console.log('Notifications - User logged in:', user.uid);
-                currentUser = user;
-
+                currentUser = { uid: user.uid, email: user.email, username: 'مستخدم', profileImage: '', verified: false };
+                
                 try {
                     const snapshot = await database.ref('users/' + user.uid).once('value');
                     if (snapshot.exists()) {
-                        const userData = snapshot.val();
-                        currentUser = {
-                            ...user,
-                            ...userData
-                        };
+                        const d = snapshot.val();
+                        currentUser.uid = user.uid;
+                        currentUser.email = user.email;
+                        currentUser.username = d.username || 'مستخدم';
+                        currentUser.profileImage = d.profileImage || '';
+                        currentUser.verified = d.verified || false;
                     }
-                } catch (error) {
-                    console.error('Notifications - Error loading user data:', error);
-                }
-
+                } catch(e) { console.error(e); }
+                
                 displayUserInfo();
                 loadNotifications();
             } else {
-                console.log('Notifications - No user logged in, redirecting...');
                 window.location.href = '../index.html';
             }
         });
 
-        // عرض معلومات المستخدم في الشريط العلوي
         function displayUserInfo() {
-            const userMini = document.getElementById('userMini');
-            const defaultImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAzNSAzNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iMTcuNSIgZmlsbD0iI0Q0QTU3NCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkNhaXJvIj7Yudio2YrYsTwvdGV4dD48L3N2Zz4=';
-
+            var d = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAzNSAzNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iMTcuNSIgZmlsbD0iI0Q0QTU3NCIvPjwvc3ZnPg==';
             if (currentUser) {
-                userMini.innerHTML = `
-                        <img src="${currentUser.profileImage || defaultImg}" alt="User" onerror="this.src='${defaultImg}'">
-                        <span>${currentUser.username || 'مستخدم'}</span>
-                    `;
+                document.getElementById('userMini').innerHTML = '<img src="'+(currentUser.profileImage||d)+'" style="width:35px;height:35px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);"><span>'+(currentUser.username||'مستخدم')+'</span>';
             }
         }
 
-        // القائمة المنسدلة
         window.toggleMenu = function() {
             document.getElementById('sideMenu').classList.toggle('active');
             document.getElementById('sideMenuOverlay').classList.toggle('active');
         };
-
         window.closeMenu = function() {
             document.getElementById('sideMenu').classList.remove('active');
             document.getElementById('sideMenuOverlay').classList.remove('active');
         };
 
-        // تحميل الإشعارات
         function loadNotifications() {
-            if (!currentUser) return;
+            if (!currentUser || !currentUser.uid) return;
 
-            const notifRef = database.ref('notifications/' + currentUser.uid);
-
-            notifRef.on('value', function(snapshot) {
-                const notificationsList = document.getElementById('notificationsList');
-                const badge = document.getElementById('notificationBadge');
+            database.ref('notifications/' + currentUser.uid).on('value', function(snapshot) {
+                var list = document.getElementById('notificationsList');
+                var badge = document.getElementById('notificationBadge');
 
                 if (snapshot.exists()) {
-                    const notifications = [];
-                    snapshot.forEach(function(childSnapshot) {
-                        notifications.push({
-                            id: childSnapshot.key,
-                            ...childSnapshot.val()
-                        });
+                    var notifications = [];
+                    snapshot.forEach(function(c) {
+                        notifications.push({ id: c.key, ...c.val() });
                     });
 
-                    // ترتيب الإشعارات من الأحدث إلى الأقدم
+                    // ترتيب من الأحدث
                     notifications.sort(function(a, b) {
                         return new Date(b.createdAt) - new Date(a.createdAt);
                     });
 
-                    // تحديث العداد
-                    const unreadCount = notifications.filter(function(n) {
-                        return !n.read;
-                    }).length;
-
-                    if (unreadCount > 0) {
-                        badge.textContent = unreadCount;
+                    // عداد غير المقروء
+                    var unread = notifications.filter(function(n) { return !n.read; }).length;
+                    if (unread > 0) {
+                        badge.textContent = unread;
                         badge.classList.add('show');
                     } else {
                         badge.classList.remove('show');
                     }
 
-                    // عرض الإشعارات
                     if (notifications.length === 0) {
-                        notificationsList.innerHTML = `
-                                <div class="no-notifications">
-                                    <i class="far fa-bell"></i>
-                                    <p style="font-size: 18px; font-weight: 600;">لا توجد إشعارات</p>
-                                    <p style="font-size: 14px;">ستظهر هنا الإشعارات عندما يتفاعل الآخرون مع منشوراتك</p>
-                                </div>
-                            `;
+                        list.innerHTML = '<div class="no-notifications"><i class="far fa-bell"></i><p style="font-size:18px;font-weight:600;">لا توجد إشعارات</p></div>';
                         return;
                     }
 
-                    notificationsList.innerHTML = notifications.map(function(notif) {
-                        const timeAgo = getTimeAgo(new Date(notif.createdAt));
-
-                        return `
-                                <div class="notification-card ${notif.read ? '' : 'unread'}" onclick="window.openNotification('${notif.id}', '${notif.postId || ''}')">
-                                    <div class="notification-icon ${notif.type || 'like'}">
-                                        <i class="fas fa-${notif.type === 'like' ? 'heart' : notif.type === 'comment' ? 'comment' : 'bell'}"></i>
-                                    </div>
-                                    <div class="notification-content">
-                                        <div class="notification-text">
-                                            <span class="notification-username">${notif.fromUser || 'مستخدم'}</span>
-                                            ${notif.type === 'like' ? 'أعجب بقصيدتك' : 
-                                              notif.type === 'comment' ? 'علق على قصيدتك' : 
-                                              notif.type === 'verification_approved' ? 'تم توثيق حسابك ✅' :
-                                              notif.type === 'verification_rejected' ? 'تم رفض طلب التوثيق ❌' :
-                                              notif.message || 'إشعار جديد'}
-                                            ${notif.text ? ': "' + notif.text.substring(0, 50) + (notif.text.length > 50 ? '...' : '') + '"' : ''}
-                                            ${notif.reason ? '<br><small style="color: #DC2626;">السبب: ' + notif.reason + '</small>' : ''}
-                                        </div>
-                                        <div class="notification-time">${timeAgo}</div>
-                                    </div>
-                                </div>
-                            `;
+                    list.innerHTML = notifications.map(function(n) {
+                        var time = getTimeAgo(new Date(n.createdAt));
+                        return '<div class="notification-card '+(n.read?'':'unread')+'" onclick="window.openNotification(\''+n.id+'\', \''+(n.postId||'')+'\')">'+
+                            '<div class="notification-icon '+(n.type||'like')+'"><i class="fas fa-'+(n.type==='like'?'heart':n.type==='comment'?'comment':'bell')+'"></i></div>'+
+                            '<div class="notification-content">'+
+                            '<div class="notification-text"><span class="notification-username">'+(n.fromUser||'مستخدم')+'</span> '+
+                            (n.type==='like'?'أعجب بقصيدتك':n.type==='comment'?'علق على قصيدتك':n.type==='verification_approved'?'تم توثيق حسابك ✅':n.type==='verification_rejected'?'تم رفض طلب التوثيق ❌':n.message||'إشعار جديد')+
+                            (n.text?': "'+n.text.substring(0,50)+(n.text.length>50?'...':'')+'"':'')+
+                            (n.reason?'<br><small style="color:#DC2626;">السبب: '+n.reason+'</small>':'')+
+                            '</div><div class="notification-time">'+time+'</div></div></div>';
                     }).join('');
                 } else {
-                    notificationsList.innerHTML = `
-                            <div class="no-notifications">
-                                <i class="far fa-bell"></i>
-                                <p style="font-size: 18px; font-weight: 600;">لا توجد إشعارات</p>
-                                <p style="font-size: 14px;">ستظهر هنا الإشعارات عندما يتفاعل الآخرون مع منشوراتك</p>
-                            </div>
-                        `;
+                    list.innerHTML = '<div class="no-notifications"><i class="far fa-bell"></i><p style="font-size:18px;font-weight:600;">لا توجد إشعارات</p><p style="font-size:14px;">ستظهر هنا الإشعارات</p></div>';
                     badge.classList.remove('show');
                 }
-            }, function(error) {
-                console.error('Notifications - Error loading:', error);
             });
         }
 
-        // فتح الإشعار والتوجيه للمنشور
         window.openNotification = async function(notifId, postId) {
             if (!currentUser) return;
-
             try {
-                // تعليم الإشعار كمقروء
-                await database.ref('notifications/' + currentUser.uid + '/' + notifId).update({
-                    read: true
-                });
-
-                // التوجيه للمنشور
-                if (postId) {
-                    window.location.href = 'home.html?post=' + postId;
-                }
-            } catch (error) {
-                console.error('Notifications - Error opening notification:', error);
-            }
+                await database.ref('notifications/'+currentUser.uid+'/'+notifId).update({ read: true });
+                if (postId) window.location.href = 'home.html?post='+postId;
+            } catch(e) {}
         };
 
-        // حساب الوقت المنقضي
         function getTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
-
-            let interval = seconds / 31536000;
-            if (interval > 1) return Math.floor(interval) + ' سنة';
-
-            interval = seconds / 2592000;
-            if (interval > 1) return Math.floor(interval) + ' شهر';
-
-            interval = seconds / 86400;
-            if (interval > 1) return Math.floor(interval) + ' يوم';
-
-            interval = seconds / 3600;
-            if (interval > 1) return Math.floor(interval) + ' ساعة';
-
-            interval = seconds / 60;
-            if (interval > 1) return Math.floor(interval) + ' دقيقة';
-
-            return 'الآن';
+            var s = Math.floor((new Date() - date) / 1000);
+            if (s < 60) return 'الآن';
+            if (s < 3600) return Math.floor(s/60) + ' دقيقة';
+            if (s < 86400) return Math.floor(s/3600) + ' ساعة';
+            if (s < 2592000) return Math.floor(s/86400) + ' يوم';
+            if (s < 31536000) return Math.floor(s/2592000) + ' شهر';
+            return Math.floor(s/31536000) + ' سنة';
         }
 
-        // تسجيل الخروج
         window.logout = function() {
             auth.signOut().then(function() {
                 localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-            }).catch(function(error) {
-                console.error('Notifications - Logout error:', error);
+                window.location.href = '../index.html';
             });
         };
 
-        console.log('Notifications - All functions loaded successfully');
+        console.log('Notifications - All loaded');
     </script>
 </body>
 
