@@ -800,46 +800,7 @@ window.submitVerification = async function() {
     reader.readAsDataURL(file);
 };
 
-            const file = idImageInput.files[0];
-            const reader = new FileReader();
-
-            reader.onload = async function(e) {
-                const imageBase64 = e.target.result;
-
-                const requestData = {
-                    userId: currentUser.uid,
-                    username: currentUser.username || 'مستخدم',
-                    userImage: currentUser.profileImage || '',
-                    idImage: imageBase64,
-                    notes: notes,
-                    status: 'pending',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-
-                try {
-                    await database.ref('verificationRequests/' + currentUser.uid).set(requestData);
-
-                    const adminNotifKey = Date.now().toString();
-                    await database.ref('adminNotifications/' + adminNotifKey).set({
-                        type: 'verification_request',
-                        userId: currentUser.uid,
-                        username: currentUser.username,
-                        message: 'طلب توثيق جديد من ' + currentUser.username,
-                        read: false,
-                        createdAt: new Date().toISOString()
-                    });
-
-                    showPendingStatus();
-                    alert('تم إرسال طلب التوثيق بنجاح!');
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('حدث خطأ: ' + error.message);
-                }
-            };
-
-            reader.readAsDataURL(file);
-        };
+            
 
         // ✅ تسجيل الخروج
         window.logout = function() {
