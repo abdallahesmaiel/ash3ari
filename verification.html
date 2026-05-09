@@ -554,41 +554,38 @@
         let currentUser = null;
         let currentRequest = null;
 
-        // ✅ تم إصلاح: استخدام auth مباشرة بدل window.auth
         auth.onAuthStateChanged(async function(user) {
-            if (user) {
-                currentUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    username: 'مستخدم',
-                    profileImage: '',
-                    verified: false
-                };
+    if (user) {
+        currentUser = {
+            uid: user.uid,
+            email: user.email,
+            username: 'مستخدم',
+            profileImage: '',
+            verified: false
+        };
 
-                try {
-    const snapshot = await database.ref('users/' + user.uid).once('value');
-    if (snapshot.exists()) {
-        const userData = snapshot.val();
-        currentUser.uid = user.uid;
-        currentUser.email = user.email;
-        currentUser.username = userData.username || 'مستخدم';
-        currentUser.profileImage = userData.profileImage || '';
-        currentUser.verified = userData.verified || false;
-    }
-} catch (error) {
-    console.error('Error loading user:', error);
-    // حتى لو فشل التحميل، نحتفظ بالمستخدم الحالي
-    currentUser.uid = user.uid;
-    currentUser.email = user.email;
+        try {
+            const snapshot = await database.ref('users/' + user.uid).once('value');
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                currentUser.uid = user.uid;
+                currentUser.email = user.email;
+                currentUser.username = userData.username || 'مستخدم';
+                currentUser.profileImage = userData.profileImage || '';
+                currentUser.verified = userData.verified || false;
+            }
+        } catch (error) {
+            console.error('Error loading user:', error);
+            currentUser.uid = user.uid;
+            currentUser.email = user.email;
         }
 
-                displayUserInfo();
-                checkVerificationStatus();
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
-
+        displayUserInfo();
+        checkVerificationStatus();
+    } else {
+        window.location.href = 'index.html';
+    }
+});
         function displayUserInfo() {
             const userMini = document.getElementById('userMini');
             const defaultImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAzNSAzNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iMTcuNSIgZmlsbD0iI0Q0QTU3NCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkNhaXJvIj7Yudio2YrYsTwvdGV4dD48L3N2Zz4=';
@@ -716,7 +713,7 @@
             `;
         }
 
-        // ✅ إرسال طلب التوثيق
+// ✅ إرسال طلب التوثيق
 window.submitVerification = async function() {
     const idImageInput = document.getElementById('idImage');
     const notes = document.getElementById('notes').value.trim();
