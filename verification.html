@@ -734,93 +734,125 @@
     }
 
     // ✅ إرسال طلب التوثيق - تم إصلاحه
-    window.submitVerification = async function() {
-        const idImageInput = document.getElementById('idImage');
-        const notes = document.getElementById('notes').value.trim();
-        const submitBtn = document.querySelector('.submit-btn');
+    // ✅ إرسال طلب التوثيق - تم إصلاح مشكلة قراءة الصورة
+window.submitVerification = async function() {
+    const idImageInput = document.getElementById('idImage');
+    const notes = document.getElementById('notes').value.trim();
+    const submitBtn = document.querySelector('.submit-btn');
 
-        // ✅ طباعة للتأكد
-        console.log('submitVerification called');
-        console.log('currentUser:', JSON.stringify(currentUser));
-        console.log('files:', idImageInput.files);
+    console.log('submitVerification called');
+    console.log('currentUser:', currentUser ? currentUser.uid : 'null');
+    console.log('files:', idImageInput.files ? idImageInput.files.length : 'no files');
 
-        if (!idImageInput.files || !idImageInput.files[0]) {
-            alert('يرجى رفع صورة إثبات الهوية');
-            return;
-        }
+    if (!idImageInput.files || !idImageInput.files[0]) {
+        alert('يرجى رفع صورة إثبات الهوية');
+        return;
+    }
 
-        // ✅ التحقق من currentUser
-        if (!currentUser) {
-            alert('لم يتم تحميل بيانات المستخدم بعد. حاول مرة أخرى.');
-            return;
-        }
-        
-        if (!currentUser.uid) {
-            alert('بيانات المستخدم غير مكتملة. يرجى إعادة تسجيل الدخول.');
-            return;
-        }
+    if (!currentUser) {
+        alert('لم يتم تحميل بيانات المستخدم بعد. حاول مرة أخرى.');
+        return;
+    }
+    
+    if (!currentUser.uid) {
+        alert('بيانات المستخدم غير مكتملة. يرجى إعادة تسجيل الدخول.');
+        return;
+    }
 
-        // ✅ تفعيل حالة التحميل
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.classList.add('loading');
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
-        }
+    const file = idImageInput.files[0];
+    
+    // ✅ التحقق من حجم الصورة (أقصى حد 5 ميجابايت)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+        alert('حجم الصورة كبير جداً. يرجى اختيار صورة أقل من 5 ميجابايت.');
+        return;
+    }
+    
+    // ✅ التحقق من نوع الملف
+    if (!file.type.startsWith('image/')) {
+        alert('يرجى اختيار ملف صورة صالح.');
+        return;
+    }
 
-        const file = idImageInput.files[0];
-        const reader = new FileReader();
+    // ✅ تفعيل حالة التحميل
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+    }
 
-        reader.onload = async function(e) {
-            const imageBase64 = e.target.result;
-
-            const requestData = {
-                userId: currentUser.uid,
-                username: currentUser.username || 'مستخدم',
-                userImage: currentUser.profileImage || '',
-                idImage: imageBase64,
-                notes: notes,
-                status: 'pending',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+    try {
+        // ✅ قراءة الصورة مع معالجة الأخطاء
+        const imageBase64 = await new Promise(function(resolve, reject) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                resolve(e.target.result);
             };
-
-            try {
-                console.log('Saving request...');
-                await database.ref('verificationRequests/' + currentUser.uid).set(requestData);
-                console.log('Request saved successfully');
-
-                const adminNotifKey = Date.now().toString();
-                await database.ref('adminNotifications/' + adminNotifKey).set({
-                    type: 'verification_request',
-                    userId: currentUser.uid,
-                    username: currentUser.username,
-                    message: 'طلب توثيق جديد من ' + currentUser.username,
-                    read: false,
-                    createdAt: new Date().toISOString()
-                });
-
-                showPendingStatus();
-                alert('تم إرسال طلب التوثيق بنجاح!');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('حدث خطأ: ' + error.message);
-
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('loading');
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
+            
+            reader.onerror = function(e) {
+                reject(new Error('فشل في قراءة الصورة'));
+            };
+            
+            reader.onabort = function() {
+                reject(new Error('تم إلغاء قراءة الصورة'));
+            };
+            
+            // ✅ استخدام readAsDataURL مع timeout
+            reader.readAsDataURL(file);
+            
+            // ✅ Timeout احتياطي (30 ثانية)
+            setTimeout(function() {
+                if (reader.readyState !== 2) { // DONE
+                    reader.abort();
+                    reject(new Error('انتهت مهلة قراءة الصورة'));
                 }
-            }
+            }, 30000);
+        });
+
+        console.log('Image loaded successfully, size:', imageBase64.length);
+
+        const requestData = {
+            userId: currentUser.uid,
+            username: currentUser.username || 'مستخدم',
+            userImage: currentUser.profileImage || '',
+            idImage: imageBase64,
+            notes: notes,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
 
-        reader.onerror = function() {
-            alert('حدث خطأ أثناء قراءة الصورة');
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('loading');
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
-            }
-        };
+        console.log('Saving request...');
+        await database.ref('verificationRequests/' + currentUser.uid).set(requestData);
+        console.log('Request saved successfully');
+
+        // إشعار للمدير
+        const adminNotifKey = Date.now().toString();
+        await database.ref('adminNotifications/' + adminNotifKey).set({
+            type: 'verification_request',
+            userId: currentUser.uid,
+            username: currentUser.username,
+            message: 'طلب توثيق جديد من ' + currentUser.username,
+            read: false,
+            createdAt: new Date().toISOString()
+        });
+
+        showPendingStatus();
+        alert('تم إرسال طلب التوثيق بنجاح!');
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('حدث خطأ: ' + error.message);
+
+        // إعادة الزر لحالته الطبيعية
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
+        }
+    }
+};
 
         reader.readAsDataURL(file);
     };
