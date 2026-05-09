@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أشعاري - توثيق الحساب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+         :root {
+            --primary: #8B4513;
+            --primary-dark: #6B3410;
+            --secondary: #D4A574;
+            --gold: #C5A572;
+            --dark: #1A1A1A;
+            --light: #FDF5E6;
+            --white: #FFFFFF;
+            --gray: #6B7280;
+            --red: #DC2626;
+            --green: #059669;
+            --blue-verified: #1D9BF0;
+            --gradient-1: linear-gradient(135deg, #8B4513 0%, #D4A574 100%);
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f5f0eb;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        
+        .top-bar {
+            background: white;
+            padding: 12px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-small {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-small i {
+            color: white;
+            font-size: 18px;
+        }
+        
+        .platform-name {
+            font-family: 'Amiri', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--dark);
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .menu-btn span {
+            width: 25px;
+            height: 3px;
+            background: var(--dark);
+            border-radius: 3px;
+        }
+        
+        .user-mini {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-mini img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--gold);
+        }
+        
+        .side-menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            display: none;
+        }
+        
+        .side-menu-overlay.active {
+            display: block;
+        }
+        
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100%;
+            background: white;
+            z-index: 201;
+            transition: left 0.3s ease;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+        }
+        
+        .side-menu.active {
+            left: 0;
+        }
+        
+        .side-menu-header {
+            padding: 20px;
+            background: var(--gradient-1);
+            color: white;
+            text-align: center;
+        }
+        
+        .side-menu-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .side-menu-items {
+            padding: 10px 0;
+        }
+        
+        .side-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            color: var(--dark);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .side-menu-item:hover {
+            background: #f5f0eb;
+            color: var(--primary);
+        }
+        
+        .side-menu-item i {
+            font-size: 20px;
+            width: 25px;
+            text-align: center;
+        }
+        
+        .side-menu-item.logout {
+            color: var(--red);
+            border-top: 1px solid #e5e7eb;
+            margin-top: 10px;
+        }
+        
+        .verification-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        
+        .verification-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .verification-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .verification-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .verification-title {
+            font-family: 'Amiri', serif;
+            font-size: 24px;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+        
+        .verification-subtitle {
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--dark);
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .file-upload {
+            border: 2px dashed #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary);
+            background: #fdf8f4;
+        }
+        
+        .file-upload i {
+            font-size: 40px;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+        
+        .file-upload input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 69, 19, 0.3);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status-card {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .status-card.approved {
+            background: #d1fae5;
+            border-color: var(--green);
+        }
+        
+        .status-card.rejected {
+            background: #fee2e2;
+            border-color: var(--red);
+        }
+        
+        .status-card i {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.3s;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item i {
+            font-size: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar">
+        <div class="user-area">
+            <button class="menu-btn" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <div class="logo-area">
+            <span class="platform-name">أشعاري</span>
+            <div class="logo-small">
+                <i class="fas fa-feather-alt"></i>
+            </div>
+        </div>
+
+        <div class="user-mini" id="userMini"></div>
+    </div>
+
+    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="closeMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-header">
+            <button class="side-menu-close" onclick="closeMenu()">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>أشعاري</h2>
+            <p>منصة الشعر العربي</p>
+        </div>
+        <div class="side-menu-items">
+            <a href="home.html" class="side-menu-item">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="search.html" class="side-menu-item">
+                <i class="fas fa-search"></i>
+                <span>البحث</span>
+            </a>
+            <a href="notifications.html" class="side-menu-item">
+                <i class="fas fa-bell"></i>
+                <span>الإشعارات</span>
+            </a>
+            <a href="verification.html" class="side-menu-item" style="background: #f5f0eb; color: var(--primary);">
+                <i class="fas fa-check-circle"></i>
+                <span>توثيق الحساب</span>
+            </a>
+            <a href="profile.html" class="side-menu-item">
+                <i class="fas fa-user"></i>
+                <span>الملف الشخصي</span>
+            </a>
+            <a href="#" class="side-menu-item logout" onclick="window.logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="verification-container">
+        <div class="verification-card" id="verificationForm">
+            <div class="verification-header">
+                <div class="verification-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2 class="verification-title">توثيق الحساب</h2>
+                <p class="verification-subtitle">أرسل طلب توثيق للحصول على العلامة الزرقاء</p>
+            </div>
+
+            <div class="form-group">
+                <label>صورة إثبات الهوية</label>
+                <div class="file-upload" onclick="document.getElementById('idImage').click()">
+                    <i class="fas fa-id-card"></i>
+                    <p>اضغط لرفع صورة الهوية</p>
+                    <input type="file" id="idImage" accept="image/*" onchange="previewIdImage(this)">
+                </div>
+                <img id="idPreview" class="preview-image">
+            </div>
+
+            <div class="form-group">
+                <label>ملاحظات (اختياري)</label>
+                <textarea id="notes" placeholder="أضف أي ملاحظات تريد إرسالها مع طلب التوثيق..."></textarea>
+            </div>
+
+            <button class="submit-btn" onclick="submitVerification()">
+                <i class="fas fa-paper-plane"></i> إرسال الطلب
+            </button>
+        </div>
+
+        <div id="verificationStatus" style="display: none;"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="home.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="search.html" class="nav-item">
+            <i class="fas fa-search"></i>
+            <span>البحث</span>
+        </a>
+        <a href="notifications.html" class="nav-item">
+            <i class="fas fa-bell"></i>
+            <span>الإشعارات</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>حسابي</span>
+        </a>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
+            authDomain: "pump-station-system.firebaseapp.com",
+            databaseURL: "https://pump-station-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "pump-station-system",
+            storageBucket: "pump-station-system.firebasestorage.app",
+            messagingSenderId: "734880960614",
+            appId: "1:734880960614:web:ef432e1bdce58aac181da7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+    </script>
+
+    <script>
+        let currentUser = null;
+        let currentRequest = null;
+
+        // ✅ تم إصلاح: استخدام auth مباشرة بدل window.auth
+        auth.onAuthStateChanged(async function(user) {
+            if (user) {
+                currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    username: 'مستخدم',
+                    profileImage: '',
+                    verified: false
+                };
+
+                try {
+                    const snapshot = await database.ref('users/' + user.uid).once('value');
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        currentUser = {...user,
+                            ...userData
+                        };
+                    }
+                } catch (error) {
+                    console.error('Error loading user:', error);
+                }
+
+                displayUserInfo();
+                checkVerificationStatus();
+            } else {
+                window.location.href = '../index.html';
+            }
+        });
+
+        function displayUserInfo() {
+            const userMini = document.getElementById('userMini');
+            const defaultImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAzNSAzNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iMTcuNSIgZmlsbD0iI0Q0QTU3NCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkNhaXJvIj7Yudio2YrYsTwvdGV4dD48L3N2Zz4=';
+
+            if (currentUser) {
+                userMini.innerHTML = `
+                    <img src="${currentUser.profileImage || defaultImg}" alt="User" onerror="this.src='${defaultImg}'">
+                    <span>${currentUser.username || 'مستخدم'}</span>
+                `;
+            }
+        }
+
+        // ✅ القائمة المنسدلة
+        window.toggleMenu = function() {
+            document.getElementById('sideMenu').classList.toggle('active');
+            document.getElementById('sideMenuOverlay').classList.toggle('active');
+        };
+
+        window.closeMenu = function() {
+            document.getElementById('sideMenu').classList.remove('active');
+            document.getElementById('sideMenuOverlay').classList.remove('active');
+        };
+
+        // ✅ معاينة صورة الهوية
+        window.previewIdImage = function(input) {
+            const preview = document.getElementById('idPreview');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
+        function checkVerificationStatus() {
+            if (currentUser.verified) {
+                showVerifiedStatus();
+                return;
+            }
+
+            database.ref('verificationRequests/' + currentUser.uid).on('value', function(snapshot) {
+                if (snapshot.exists()) {
+                    currentRequest = snapshot.val();
+
+                    if (currentRequest.status === 'pending') {
+                        showPendingStatus();
+                    } else if (currentRequest.status === 'approved') {
+                        showApprovedStatus();
+                    } else if (currentRequest.status === 'rejected') {
+                        showRejectedStatus(currentRequest.rejectReason || currentRequest.reason, currentRequest.rejectedAt);
+                    }
+                } else {
+                    showForm();
+                }
+            });
+        }
+
+        function showForm() {
+            document.getElementById('verificationForm').style.display = 'block';
+            document.getElementById('verificationStatus').style.display = 'none';
+        }
+
+        function showPendingStatus() {
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('verificationStatus').style.display = 'block';
+            document.getElementById('verificationStatus').innerHTML = `
+                <div class="status-card">
+                    <i class="fas fa-clock" style="color: #f59e0b; font-size: 40px;"></i>
+                    <h3 style="color: #92400e;">جاري مراجعة الطلب</h3>
+                    <p style="color: #92400e;">طلبك قيد المراجعة من قبل الإدارة</p>
+                </div>
+            `;
+        }
+
+        function showApprovedStatus() {
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('verificationStatus').style.display = 'block';
+            document.getElementById('verificationStatus').innerHTML = `
+                <div class="status-card approved">
+                    <i class="fas fa-check-circle" style="color: var(--green); font-size: 40px;"></i>
+                    <h3 style="color: #065f46;">تم توثيق الحساب</h3>
+                    <p style="color: #065f46;">العلامة الزرقاء ستظهر بجانب اسمك</p>
+                </div>
+            `;
+        }
+
+        function showRejectedStatus(reason, rejectedAt) {
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('verificationStatus').style.display = 'block';
+
+            if (rejectedAt) {
+                const timeSinceRejection = new Date() - new Date(rejectedAt);
+                const twelveHours = 12 * 60 * 60 * 1000;
+
+                if (timeSinceRejection > twelveHours) {
+                    database.ref('verificationRequests/' + currentUser.uid).remove();
+                    showForm();
+                    return;
+                }
+
+                const hoursLeft = Math.ceil((twelveHours - timeSinceRejection) / (60 * 60 * 1000));
+
+                document.getElementById('verificationStatus').innerHTML = `
+                    <div class="status-card rejected">
+                        <i class="fas fa-times-circle" style="color: var(--red); font-size: 40px;"></i>
+                        <h3 style="color: #991b1b;">تم رفض الطلب</h3>
+                        <p style="color: #991b1b;">سبب الرفض: ${reason || 'غير محدد'}</p>
+                        <p style="color: #991b1b; font-size: 13px;">يمكنك إعادة التقديم بعد ${hoursLeft} ساعة</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showVerifiedStatus() {
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('verificationStatus').style.display = 'block';
+            document.getElementById('verificationStatus').innerHTML = `
+                <div class="status-card approved">
+                    <i class="fas fa-check-circle" style="color: var(--green); font-size: 40px;"></i>
+                    <h3 style="color: #065f46;">حساب موثق</h3>
+                    <p style="color: #065f46;">حسابك موثق بالفعل</p>
+                </div>
+            `;
+        }
+
+        // ✅ إرسال طلب التوثيق
+        window.submitVerification = async function() {
+            const idImageInput = document.getElementById('idImage');
+            const notes = document.getElementById('notes').value.trim();
+
+            if (!idImageInput.files || !idImageInput.files[0]) {
+                alert('يرجى رفع صورة إثبات الهوية');
+                return;
+            }
+
+            if (!currentUser || !currentUser.uid) {
+                alert('يجب تسجيل الدخول أولاً');
+                return;
+            }
+
+            const file = idImageInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                const imageBase64 = e.target.result;
+
+                const requestData = {
+                    userId: currentUser.uid,
+                    username: currentUser.username || 'مستخدم',
+                    userImage: currentUser.profileImage || '',
+                    idImage: imageBase64,
+                    notes: notes,
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                try {
+                    await database.ref('verificationRequests/' + currentUser.uid).set(requestData);
+
+                    const adminNotifKey = Date.now().toString();
+                    await database.ref('adminNotifications/' + adminNotifKey).set({
+                        type: 'verification_request',
+                        userId: currentUser.uid,
+                        username: currentUser.username,
+                        message: 'طلب توثيق جديد من ' + currentUser.username,
+                        read: false,
+                        createdAt: new Date().toISOString()
+                    });
+
+                    showPendingStatus();
+                    alert('تم إرسال طلب التوثيق بنجاح!');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('حدث خطأ: ' + error.message);
+                }
+            };
+
+            reader.readAsDataURL(file);
+        };
+
+        // ✅ تسجيل الخروج
+        window.logout = function() {
+            auth.signOut().then(function() {
+                localStorage.removeItem('currentUser');
+                window.location.href = '../index.html';
+            }).catch(function(error) {
+                console.error('Logout error:', error);
+            });
+        };
+
+        console.log('Verification - All functions loaded');
+    </script>
+</body>
+
+</html>
