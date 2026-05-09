@@ -381,6 +381,41 @@
         .nav-item i {
             font-size: 20px;
         }
+        .submit-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.submit-btn.loading {
+    pointer-events: none;
+    opacity: 0.8;
+    background: var(--primary-dark);
+}
+
+.submit-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.submit-btn .fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+    }
     </style>
 </head>
 
@@ -682,19 +717,88 @@
         }
 
         // ✅ إرسال طلب التوثيق
-        window.submitVerification = async function() {
-            const idImageInput = document.getElementById('idImage');
-            const notes = document.getElementById('notes').value.trim();
+window.submitVerification = async function() {
+    const idImageInput = document.getElementById('idImage');
+    const notes = document.getElementById('notes').value.trim();
+    
+    // ✅ الحصول على زر الإرسال
+    const submitBtn = document.querySelector('.submit-btn');
 
-            if (!idImageInput.files || !idImageInput.files[0]) {
-                alert('يرجى رفع صورة إثبات الهوية');
-                return;
-            }
+    if (!idImageInput.files || !idImageInput.files[0]) {
+        alert('يرجى رفع صورة إثبات الهوية');
+        return;
+    }
 
-            if (!currentUser || !currentUser.uid) {
-                alert('يجب تسجيل الدخول أولاً');
-                return;
+    if (!currentUser || !currentUser.uid) {
+        alert('يجب تسجيل الدخول أولاً');
+        return;
+    }
+
+    // ✅ تفعيل حالة التحميل
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+    }
+
+    const file = idImageInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async function(e) {
+        const imageBase64 = e.target.result;
+
+        const requestData = {
+            userId: currentUser.uid,
+            username: currentUser.username || 'مستخدم',
+            userImage: currentUser.profileImage || '',
+            idImage: imageBase64,
+            notes: notes,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        try {
+            await database.ref('verificationRequests/' + currentUser.uid).set(requestData);
+
+            const adminNotifKey = Date.now().toString();
+            await database.ref('adminNotifications/' + adminNotifKey).set({
+                type: 'verification_request',
+                userId: currentUser.uid,
+                username: currentUser.username,
+                message: 'طلب توثيق جديد من ' + currentUser.username,
+                read: false,
+                createdAt: new Date().toISOString()
+            });
+
+            showPendingStatus();
+            alert('تم إرسال طلب التوثيق بنجاح!');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('حدث خطأ: ' + error.message);
+            
+            // ✅ إعادة الزر لحالته الطبيعية عند الخطأ
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
             }
+        }
+    };
+
+    reader.onerror = function() {
+        alert('حدث خطأ أثناء قراءة الصورة');
+        
+        // ✅ إعادة الزر لحالته الطبيعية عند الخطأ
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
+        }
+    };
+
+    reader.readAsDataURL(file);
+};
 
             const file = idImageInput.files[0];
             const reader = new FileReader();
