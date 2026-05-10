@@ -619,7 +619,7 @@
         document.getElementById('fabBtn').addEventListener('click', window.openAddPostModal);
         document.getElementById('closeModalBtn').addEventListener('click', window.closeAddPostModal);
         document.getElementById('cancelPostBtn').addEventListener('click', window.closeAddPostModal);
-        document.getElementById('logoutBtn').addEventListener('click', function(e) { e.preventDefault(); auth.signOut().then(function() { localStorage.removeItem('currentUser'); window.location.href='../index.html'; }); });
+        document.getElementById('logoutBtn').addEventListener('click', function(e) { e.preventDefault(); auth.signOut().then(function() { localStorage.removeItem('currentUser'); window.location.href='index.html'; }); });
 
         // ✅ إغلاق التوست بالضغط على الخلفية
         document.getElementById('successToast').addEventListener('click', function(e) { if (e.target===this) window.closeSuccessToast(); });
