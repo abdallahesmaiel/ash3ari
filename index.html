@@ -418,7 +418,7 @@
                 try { localStorage.setItem('currentUser', JSON.stringify(userInfo)); } catch(e) {}
                 
                 showSuccess('تم تسجيل الدخول بنجاح!');
-                setTimeout(function() { window.location.href = 'pages/home.html'; }, 1000);
+                setTimeout(function() { window.location.href = 'home.html'; }, 1000);
                 
             } catch (error) {
                 console.error('Login error:', error.code);
