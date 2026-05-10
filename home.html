@@ -239,17 +239,12 @@
         .loading-spinner { text-align: center; padding: 40px; color: var(--gray); }
         .loading-spinner i { font-size: 30px; }
 
-        /* ✅ تحسينات الشاشات الصغيرة */
         @media (max-width: 480px) {
             .post-card { padding: 15px; }
             .post-content { font-size: 16px; }
             .post-title { font-size: 18px; }
             .action-btn { font-size: 12px; padding: 5px 8px; }
-            /* ✅ زر عائم أصغر وأبعد عن الأسفل */
-            .fab {
-                width: 48px; height: 48px; bottom: 85px; right: 15px; font-size: 22px;
-                z-index: 49;
-            }
+            .fab { width: 48px; height: 48px; bottom: 85px; right: 15px; font-size: 22px; z-index: 49; }
             .post-actions { gap: 10px; flex-wrap: wrap; }
             .post-actions .action-btn { flex: 1; justify-content: center; min-width: 60px; }
         }
@@ -373,23 +368,12 @@
 
         let currentUser = null;
         let allPosts = [];
+        let usersCache = {}; // ✅ تخزين مؤقت لصور المستخدمين
 
-        // ✅ إظهار شريط التحميل
-        function showProgressBar() {
-            document.getElementById('uploadProgressBar').classList.add('active');
-        }
-        // ✅ إخفاء شريط التحميل
-        function hideProgressBar() {
-            document.getElementById('uploadProgressBar').classList.remove('active');
-        }
-        // ✅ إظهار إشعار النجاح
-        function showSuccessToast() {
-            document.getElementById('successToast').classList.add('active');
-        }
-        // ✅ إخفاء إشعار النجاح
-        window.closeSuccessToast = function() {
-            document.getElementById('successToast').classList.remove('active');
-        };
+        function showProgressBar() { document.getElementById('uploadProgressBar').classList.add('active'); }
+        function hideProgressBar() { document.getElementById('uploadProgressBar').classList.remove('active'); }
+        function showSuccessToast() { document.getElementById('successToast').classList.add('active'); }
+        window.closeSuccessToast = function() { document.getElementById('successToast').classList.remove('active'); };
 
         auth.onAuthStateChanged(async function(user) {
             if (user) {
@@ -405,8 +389,45 @@
                 displayUserInfo();
                 loadPosts();
                 loadNotificationsCount();
+                // ✅ الاستماع لتغييرات المستخدمين لتحديث الصور
+                listenForUserUpdates();
             } else { window.location.href = '../index.html'; }
         });
+
+        // ✅ الاستماع لتحديثات صور المستخدمين
+        function listenForUserUpdates() {
+            database.ref('users').on('child_changed', function(snapshot) {
+                if (snapshot.exists()) {
+                    var updatedUser = snapshot.val();
+                    updatedUser.uid = snapshot.key;
+                    usersCache[snapshot.key] = updatedUser;
+                    // ✅ إعادة عرض المنشورات لتحديث الصور
+                    if (allPosts.length > 0) {
+                        displayPosts(allPosts);
+                    }
+                }
+            });
+            // ✅ تحميل كل المستخدمين في الكاش
+            database.ref('users').once('value', function(snapshot) {
+                if (snapshot.exists()) {
+                    snapshot.forEach(function(child) {
+                        usersCache[child.key] = { uid: child.key, ...child.val() };
+                    });
+                    // ✅ إعادة عرض المنشورات بالصور المحدثة
+                    if (allPosts.length > 0) {
+                        displayPosts(allPosts);
+                    }
+                }
+            });
+        }
+
+        // ✅ جلب أحدث صورة للمستخدم من الكاش
+        function getLatestUserImage(userId, fallbackImage) {
+            if (usersCache[userId] && usersCache[userId].profileImage) {
+                return usersCache[userId].profileImage;
+            }
+            return fallbackImage;
+        }
 
         function displayUserInfo() {
             var d = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUiIGhlaWdodD0iMzUiIHZpZXdCb3g9IjAgMCAzNSAzNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxNy41IiBjeT0iMTcuNSIgcj0iMTcuNSIgZmlsbD0iI0Q0QTU3NCIvPjwvc3ZnPg==';
@@ -436,7 +457,7 @@
             }
         });
 
-        // ✅ نشر منشور مع شريط التحميل وإشعار النجاح
+        // ✅ نشر منشور - إغلاق النافذة تلقائياً بعد النشر
         document.getElementById('publishPostBtn').addEventListener('click', async function() {
             var title = document.getElementById('postTitle').value.trim();
             var type = document.getElementById('postType').value;
@@ -445,6 +466,8 @@
             if (!title || !content) { alert('يرجى إدخال عنوان القصيدة ونصها'); return; }
             if (!currentUser || !currentUser.uid) { alert('يجب تسجيل الدخول'); return; }
 
+            // ✅ إغلاق نافذة الإضافة فوراً
+            window.closeAddPostModal();
             // ✅ إظهار شريط التحميل
             showProgressBar();
 
@@ -466,11 +489,7 @@
                     createdAt: new Date().toISOString(), timestamp: Date.now()
                 });
 
-                // ✅ إخفاء شريط التحميل
                 hideProgressBar();
-                // ✅ إغلاق النافذة
-                window.closeAddPostModal();
-                // ✅ إظهار إشعار النجاح المنبثق
                 showSuccessToast();
 
             } catch(e) {
@@ -501,8 +520,10 @@
             }
             container.innerHTML = posts.map(function(post) {
                 var liked = post.likes && currentUser && post.likes[currentUser.uid];
+                // ✅ استخدام أحدث صورة من الكاش
+                var userImg = getLatestUserImage(post.userId, post.userImage || dImg);
                 return '<div class="post-card" id="post-'+post.id+'">'+
-                    '<div class="post-header"><img src="'+(post.userImage||dImg)+'" class="post-user-img" onerror="this.src=\''+dImg+'\'"><div class="post-user-info"><div class="post-username">'+post.username+(post.verified?' <i class="fas fa-check-circle verified-badge"></i>':'')+'</div><span class="post-type">'+(post.type||'')+'</span></div></div>'+
+                    '<div class="post-header"><img src="'+userImg+'" class="post-user-img" onerror="this.src=\''+dImg+'\'"><div class="post-user-info"><div class="post-username">'+post.username+(post.verified?' <i class="fas fa-check-circle verified-badge"></i>':'')+'</div><span class="post-type">'+(post.type||'')+'</span></div></div>'+
                     '<h3 class="post-title">'+(post.title||'')+'</h3><div class="post-content">'+(post.content||'')+'</div>'+
                     (post.image?'<img src="'+post.image+'" class="post-image">':'')+
                     '<div class="post-actions">'+
@@ -620,8 +641,6 @@
         document.getElementById('closeModalBtn').addEventListener('click', window.closeAddPostModal);
         document.getElementById('cancelPostBtn').addEventListener('click', window.closeAddPostModal);
         document.getElementById('logoutBtn').addEventListener('click', function(e) { e.preventDefault(); auth.signOut().then(function() { localStorage.removeItem('currentUser'); window.location.href='index.html'; }); });
-
-        // ✅ إغلاق التوست بالضغط على الخلفية
         document.getElementById('successToast').addEventListener('click', function(e) { if (e.target===this) window.closeSuccessToast(); });
     </script>
 </body>
