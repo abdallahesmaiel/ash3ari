@@ -197,12 +197,53 @@
             padding: 0 15px;
         }
         
+        /* ✅ رأس الصفحة مع زر الكل كمقروء */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
         .page-title {
             font-family: 'Amiri', serif;
             font-size: 24px;
             color: var(--primary-dark);
-            margin-bottom: 20px;
-            text-align: center;
+            margin: 0;
+        }
+        
+        .mark-all-read-btn {
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .mark-all-read-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 69, 19, 0.3);
+        }
+        
+        .mark-all-read-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .mark-all-read-btn i {
+            font-size: 16px;
         }
         
         .notification-card {
@@ -248,6 +289,22 @@
         .notification-icon.comment {
             background: #DBEAFE;
             color: #3b82f6;
+        }
+        
+        /* ✅ أيقونة للتوثيق */
+        .notification-icon.verification_approved {
+            background: #D1FAE5;
+            color: #059669;
+        }
+        
+        .notification-icon.verification_rejected {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+        
+        .notification-icon.default-icon {
+            background: #F3F4F6;
+            color: #6B7280;
         }
         
         .notification-content {
@@ -304,6 +361,7 @@
             text-decoration: none;
             font-size: 12px;
             transition: color 0.3s;
+            position: relative;
         }
         
         .nav-item.active {
@@ -316,21 +374,36 @@
         
         .notification-badge {
             position: absolute;
-            top: -5px;
-            right: -5px;
+            top: -8px;
+            right: -8px;
             background: var(--red);
             color: white;
-            width: 18px;
-            height: 18px;
+            min-width: 20px;
+            height: 20px;
             border-radius: 50%;
-            font-size: 10px;
+            font-size: 11px;
+            font-weight: 700;
             display: none;
             align-items: center;
             justify-content: center;
+            padding: 2px;
+            border: 2px solid white;
+            line-height: 1;
         }
         
         .notification-badge.show {
             display: flex;
+        }
+
+        @media (max-width: 480px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .mark-all-read-btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -386,7 +459,6 @@
                 <span>الملف الشخصي</span>
             </a>
             <a href="#" class="side-menu-item logout" onclick="window.logout()">
-
                 <i class="fas fa-sign-out-alt"></i>
                 <span>تسجيل الخروج</span>
             </a>
@@ -394,7 +466,14 @@
     </div>
 
     <div class="notifications-container">
-        <h1 class="page-title">الإشعارات</h1>
+        <!-- ✅ رأس الصفحة مع زر الكل كمقروء -->
+        <div class="page-header">
+            <h1 class="page-title">الإشعارات</h1>
+            <button class="mark-all-read-btn" id="markAllReadBtn" onclick="window.markAllAsRead()">
+                <i class="fas fa-check-double"></i>
+                <span>الكل كمقروء</span>
+            </button>
+        </div>
         <div id="notificationsList"></div>
     </div>
 
@@ -418,7 +497,7 @@
         </a>
     </div>
 
-      <!-- Firebase Scripts -->
+    <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -435,13 +514,13 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();          // ✅ تأكد من هذا
-        const database = firebase.database();   // ✅ وهذا
+        const auth = firebase.auth();
+        const database = firebase.database();
         console.log('Notifications - Firebase ready');
 
         let currentUser = null;
+        let allNotifications = []; // ✅ تخزين جميع الإشعارات للاستخدام في زر الكل كمقروء
 
-        // ✅ استخدام auth مباشرة
         auth.onAuthStateChanged(async function(user) {
             if (user) {
                 currentUser = { uid: user.uid, email: user.email, username: 'مستخدم', profileImage: '', verified: false };
@@ -487,6 +566,7 @@
             database.ref('notifications/' + currentUser.uid).on('value', function(snapshot) {
                 var list = document.getElementById('notificationsList');
                 var badge = document.getElementById('notificationBadge');
+                var markAllBtn = document.getElementById('markAllReadBtn');
 
                 if (snapshot.exists()) {
                     var notifications = [];
@@ -499,13 +579,20 @@
                         return new Date(b.createdAt) - new Date(a.createdAt);
                     });
 
-                    // عداد غير المقروء
+                    // ✅ تخزين الإشعارات
+                    allNotifications = notifications;
+
+                    // ✅ عداد غير المقروء - يظهر في شريط التنقل السفلي فقط
                     var unread = notifications.filter(function(n) { return !n.read; }).length;
                     if (unread > 0) {
-                        badge.textContent = unread;
+                        badge.textContent = unread > 99 ? '99+' : unread;
                         badge.classList.add('show');
+                        // ✅ تفعيل زر الكل كمقروء
+                        if (markAllBtn) markAllBtn.disabled = false;
                     } else {
                         badge.classList.remove('show');
+                        // ✅ تعطيل زر الكل كمقروء إذا لم يكن هناك غير مقروء
+                        if (markAllBtn) markAllBtn.disabled = true;
                     }
 
                     if (notifications.length === 0) {
@@ -515,28 +602,98 @@
 
                     list.innerHTML = notifications.map(function(n) {
                         var time = getTimeAgo(new Date(n.createdAt));
+                        
+                        // ✅ تحديد الأيقونة المناسبة
+                        var iconClass = 'default-icon';
+                        var iconType = 'bell';
+                        if (n.type === 'like') { iconClass = 'like'; iconType = 'heart'; }
+                        else if (n.type === 'comment') { iconClass = 'comment'; iconType = 'comment'; }
+                        else if (n.type === 'verification_approved') { iconClass = 'verification_approved'; iconType = 'check-circle'; }
+                        else if (n.type === 'verification_rejected') { iconClass = 'verification_rejected'; iconType = 'times-circle'; }
+                        
+                        // ✅ تحديد النص المناسب
+                        var actionText = n.message || 'إشعار جديد';
+                        if (n.type === 'like') actionText = 'أعجب بقصيدتك';
+                        else if (n.type === 'comment') actionText = 'علق على قصيدتك';
+                        else if (n.type === 'verification_approved') actionText = 'تم توثيق حسابك ✅';
+                        else if (n.type === 'verification_rejected') actionText = 'تم رفض طلب التوثيق ❌';
+                        
+                        // ✅ نص التعليق إن وجد
+                        var commentPreview = '';
+                        if (n.text) {
+                            commentPreview = ': "' + n.text.substring(0, 50) + (n.text.length > 50 ? '...' : '') + '"';
+                        }
+                        
+                        // ✅ سبب الرفض إن وجد
+                        var reasonText = '';
+                        if (n.reason) {
+                            reasonText = '<br><small style="color:#DC2626;">السبب: ' + n.reason + '</small>';
+                        }
+
                         return '<div class="notification-card '+(n.read?'':'unread')+'" onclick="window.openNotification(\''+n.id+'\', \''+(n.postId||'')+'\')">'+
-                            '<div class="notification-icon '+(n.type||'like')+'"><i class="fas fa-'+(n.type==='like'?'heart':n.type==='comment'?'comment':'bell')+'"></i></div>'+
+                            '<div class="notification-icon '+iconClass+'"><i class="fas fa-'+iconType+'"></i></div>'+
                             '<div class="notification-content">'+
-                            '<div class="notification-text"><span class="notification-username">'+(n.fromUser||'مستخدم')+'</span> '+
-                            (n.type==='like'?'أعجب بقصيدتك':n.type==='comment'?'علق على قصيدتك':n.type==='verification_approved'?'تم توثيق حسابك ✅':n.type==='verification_rejected'?'تم رفض طلب التوثيق ❌':n.message||'إشعار جديد')+
-                            (n.text?': "'+n.text.substring(0,50)+(n.text.length>50?'...':'')+'"':'')+
-                            (n.reason?'<br><small style="color:#DC2626;">السبب: '+n.reason+'</small>':'')+
-                            '</div><div class="notification-time">'+time+'</div></div></div>';
+                            '<div class="notification-text"><span class="notification-username">'+(n.fromUser||'مستخدم')+'</span> '+actionText+commentPreview+reasonText+'</div>'+
+                            '<div class="notification-time">'+time+'</div></div></div>';
                     }).join('');
                 } else {
                     list.innerHTML = '<div class="no-notifications"><i class="far fa-bell"></i><p style="font-size:18px;font-weight:600;">لا توجد إشعارات</p><p style="font-size:14px;">ستظهر هنا الإشعارات</p></div>';
                     badge.classList.remove('show');
+                    if (markAllBtn) markAllBtn.disabled = true;
                 }
             });
         }
 
+        // ✅ فتح إشعار واحد (تعليم كمقروء)
         window.openNotification = async function(notifId, postId) {
             if (!currentUser) return;
             try {
                 await database.ref('notifications/'+currentUser.uid+'/'+notifId).update({ read: true });
                 if (postId) window.location.href = 'home.html?post='+postId;
             } catch(e) {}
+        };
+
+        // ✅ زر الكل كمقروء - تعليم جميع الإشعارات كمقروءة
+        window.markAllAsRead = async function() {
+            if (!currentUser || !currentUser.uid) return;
+            if (allNotifications.length === 0) return;
+            
+            var markAllBtn = document.getElementById('markAllReadBtn');
+            if (markAllBtn) {
+                markAllBtn.disabled = true;
+                markAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري...</span>';
+            }
+            
+            try {
+                // تحديث جميع الإشعارات غير المقروءة
+                var updates = {};
+                var unreadCount = 0;
+                
+                allNotifications.forEach(function(n) {
+                    if (!n.read) {
+                        updates['notifications/' + currentUser.uid + '/' + n.id + '/read'] = true;
+                        unreadCount++;
+                    }
+                });
+                
+                if (unreadCount > 0) {
+                    await database.ref().update(updates);
+                    console.log('Marked ' + unreadCount + ' notifications as read');
+                }
+                
+                // استعادة الزر
+                if (markAllBtn) {
+                    markAllBtn.innerHTML = '<i class="fas fa-check-double"></i><span>الكل كمقروء</span>';
+                    markAllBtn.disabled = true;
+                }
+                
+            } catch(e) {
+                console.error('Error marking all as read:', e);
+                if (markAllBtn) {
+                    markAllBtn.innerHTML = '<i class="fas fa-check-double"></i><span>الكل كمقروء</span>';
+                    markAllBtn.disabled = false;
+                }
+            }
         };
 
         function getTimeAgo(date) {
