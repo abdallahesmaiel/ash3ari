@@ -66,7 +66,16 @@
         .post-user-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
         .post-user-info { flex: 1; }
         .post-username { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 5px; }
-        .verified-badge { color: var(--blue-verified); font-size: 16px; }
+
+        /* ✅ علامة التوثيق الجديدة */
+        .verified-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; background: var(--blue-verified);
+            border-radius: 50%; color: white; font-size: 12px;
+            box-shadow: 0 0 6px rgba(29,155,240,0.4);
+        }
+        .verified-badge i { font-size: 11px; }
+
         .post-type { font-size: 12px; color: var(--gray); background: #f3f4f6; padding: 3px 10px; border-radius: 12px; display: inline-block; }
         .post-title { font-family: 'Amiri', serif; font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-bottom: 10px; }
         .post-content { font-family: 'Scheherazade New', serif; font-size: 18px; line-height: 1.8; color: var(--dark); white-space: pre-wrap; margin-bottom: 15px; }
@@ -98,25 +107,40 @@
         .btn-secondary { background: #e5e7eb; color: var(--dark); }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
+        /* ✅ التعليقات - تصميم فيسبوكي مع ردود */
         .comments-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; display: none; }
         .comments-section.show { display: block; }
         .comments-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; font-size: 14px; color: var(--gray); }
-        .comment { display: flex; gap: 10px; margin-bottom: 14px; }
+        .comments-header span { font-weight: 600; }
+
+        .comment-wrapper { margin-bottom: 12px; }
+        .comment-main { display: flex; gap: 10px; }
         .comment-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid #e5e7eb; }
-        .comment-body { background: #f0f2f5; border-radius: 18px; padding: 8px 14px; flex: 1; }
-        .comment-username { font-weight: 700; font-size: 13px; color: var(--dark); margin-bottom: 2px; }
-        /* ✅ تلوين اسم المُشار إليه بالأزرق */
-        .comment-text { font-size: 14px; color: #1c1e21; line-height: 1.5; }
+        .comment-content { flex: 1; }
+        .comment-bubble { background: #f0f2f5; border-radius: 18px; padding: 8px 14px; display: inline-block; max-width: 100%; }
+        .comment-username { font-weight: 700; font-size: 13px; color: var(--dark); margin-bottom: 2px; display: flex; align-items: center; gap: 5px; }
+        .comment-text { font-size: 14px; color: #1c1e21; line-height: 1.5; word-break: break-word; }
         .comment-text .mention { color: var(--mention-blue); font-weight: 600; }
-        .comment-time { font-size: 11px; color: #65676b; margin-top: 2px; }
-        .comment-actions { display: flex; gap: 15px; margin-top: 2px; margin-right: 46px; }
-        .comment-action-btn { background: none; border: none; color: #65676b; font-size: 11px; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 600; }
+        .comment-meta { display: flex; gap: 15px; margin-top: 3px; padding-right: 46px; }
+        .comment-time { font-size: 11px; color: #65676b; }
+        .comment-reply-btn { background: none; border: none; color: #65676b; font-size: 11px; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 600; padding: 0; }
+        .comment-reply-btn:hover { text-decoration: underline; }
+
+        /* ✅ الردود */
+        .comment-replies { margin-right: 46px; margin-top: 4px; }
+        .comment-reply-item { display: flex; gap: 8px; margin-bottom: 6px; }
+        .comment-reply-item .comment-img { width: 28px; height: 28px; }
+        .comment-reply-item .comment-bubble { background: #f0f2f5; border-radius: 14px; padding: 6px 12px; }
+        .comment-reply-item .comment-username { font-size: 12px; }
+        .comment-reply-item .comment-text { font-size: 13px; }
+
         .add-comment { display: flex; gap: 8px; margin-top: 12px; align-items: flex-start; }
         .add-comment img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         .add-comment-input-wrapper { flex: 1; position: relative; }
         .add-comment-input-wrapper input { width: 100%; padding: 10px 45px 10px 15px; border: 1px solid #e5e7eb; border-radius: 25px; font-family: 'Cairo', sans-serif; font-size: 14px; background: #f0f2f5; transition: all 0.3s; }
         .add-comment-input-wrapper input:focus { outline: none; border-color: var(--primary); background: white; }
         .add-comment-input-wrapper button { position: absolute; left: 5px; top: 50%; transform: translateY(-50%); background: var(--gradient-1); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 14px; }
+        .add-comment-input-wrapper button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .share-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 400; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
         .share-overlay.active { display: flex; }
@@ -146,11 +170,8 @@
             .fab { width: 48px; height: 48px; bottom: 85px; right: 15px; font-size: 22px; z-index: 49; }
             .post-actions { gap: 10px; flex-wrap: wrap; }
             .post-actions .action-btn { flex: 1; justify-content: center; min-width: 60px; }
-        }
-        @media (max-width: 380px) {
-            .fab { width: 44px; height: 44px; bottom: 80px; right: 10px; font-size: 20px; }
-            .post-actions { gap: 5px; }
-            .action-btn { font-size: 11px; padding: 5px 6px; }
+            .comment-replies { margin-right: 36px; }
+            .comment-meta { padding-right: 36px; }
         }
     </style>
 </head>
@@ -317,14 +338,13 @@
         function displayPosts(posts) {
             var container = document.getElementById('postsContainer');
             var dImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDUiIGhlaWdodD0iNDUiIHZpZXdCb3g9IjAgMCA0NSA0NSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMi41IiBjeT0iMjIuNSIgcj0iMjIuNSIgZmlsbD0iI0Q0QTU3NCIvPjwvc3ZnPg==';
-            var cImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxOCIgZmlsbD0iI0Q0QTU3NCIvPjwvc3ZnPg==';
+            var cImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiAgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxOCIgZmlsbD0iI0Q0QTU3NCIvPjwvc3ZnPg==';
             if (posts.length === 0) { container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--gray);"><i class="fas fa-feather-alt" style="font-size:50px;margin-bottom:15px;opacity:0.3;"></i><p style="font-size:18px;font-weight:600;">لا توجد منشورات بعد</p></div>'; return; }
             container.innerHTML = posts.map(function(post) {
                 var liked = post.likes && currentUser && post.likes[currentUser.uid];
                 var userImg = getLatestUserImage(post.userId, post.userImage || dImg);
-                // ✅ عرض عداد التعليقات الصحيح
                 return '<div class="post-card" id="post-'+post.id+'">'+
-                    '<div class="post-header"><img src="'+userImg+'" class="post-user-img" onerror="this.src=\''+dImg+'\'"><div class="post-user-info"><div class="post-username">'+post.username+(post.verified?' <i class="fas fa-check-circle verified-badge"></i>':'')+'</div><span class="post-type">'+(post.type||'')+'</span></div></div>'+
+                    '<div class="post-header"><img src="'+userImg+'" class="post-user-img" onerror="this.src=\''+dImg+'\'"><div class="post-user-info"><div class="post-username">'+post.username+(post.verified?' <span class="verified-badge"><i class="fas fa-check"></i></span>':'')+'</div><span class="post-type">'+(post.type||'')+'</span></div></div>'+
                     '<h3 class="post-title">'+(post.title||'')+'</h3><div class="post-content">'+(post.content||'')+'</div>'+
                     (post.image?'<img src="'+post.image+'" class="post-image">':'')+
                     '<div class="post-actions">'+
@@ -345,7 +365,6 @@
                 else { likes[currentUser.uid] = true; }
                 var newCount = Object.keys(likes).length;
                 await database.ref('posts/'+postId).update({ likes: likes, likesCount: newCount });
-                // ✅ تحديث العداد مباشرة
                 var el = document.getElementById('likesCount-'+postId);
                 if (el) el.textContent = newCount;
                 if (!(post.likes||{})[currentUser.uid] && post.userId !== currentUser.uid) {
@@ -363,42 +382,63 @@
         function loadComments(postId) {
             database.ref('posts/'+postId+'/comments').on('value', function(snapshot) {
                 var list = document.getElementById('commentsList-'+postId);
-                var cImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxOCIgZmlsbD0iI0Q0QTU3NCIvPjwvc3ZnPg==';
+                var cImg = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiAgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxOCIgZmlsbD0iI0Q0QTU3NCIvPjwvc3ZnPg==';
                 if (snapshot.exists()) {
                     var comments = [];
                     snapshot.forEach(function(c) { comments.push({ id:c.key, ...c.val() }); });
                     comments.sort(function(a,b) { return new Date(b.createdAt) - new Date(a.createdAt); });
-                    // ✅ تحديث عداد التعليقات مباشرة
                     var countEl = document.getElementById('commentsCount-'+postId);
                     if (countEl) countEl.textContent = comments.length;
                     list.innerHTML = comments.map(function(c) {
-                        // ✅ تلوين اسم المُشار إليه بالأزرق
                         var displayText = formatMentions(c.text);
-                        return '<div class="comment"><img src="'+(c.userImage||cImg)+'" class="comment-img" onerror="this.src=\''+cImg+'\'"><div><div class="comment-body"><div class="comment-username">'+(c.username||'مستخدم')+(c.verified?' <i class="fas fa-check-circle verified-badge"></i>':'')+'</div><div class="comment-text">'+displayText+'</div></div><div class="comment-actions"><span class="comment-time">'+getTimeAgo(new Date(c.createdAt))+'</span><button class="comment-action-btn" onclick="window.replyToComment(\''+postId+'\',\''+c.id+'\',\''+(c.username||'مستخدم')+'\',\''+(c.userId||'')+'\')">رد</button></div></div></div>';
+                        return '<div class="comment-wrapper">'+
+                            '<div class="comment-main">'+
+                            '<img src="'+(c.userImage||cImg)+'" class="comment-img" onerror="this.src=\''+cImg+'\'">'+
+                            '<div class="comment-content">'+
+                            '<div class="comment-bubble">'+
+                            '<div class="comment-username">'+(c.username||'مستخدم')+(c.verified?' <span class="verified-badge"><i class="fas fa-check"></i></span>':'')+'</div>'+
+                            '<div class="comment-text">'+displayText+'</div>'+
+                            '</div>'+
+                            '<div class="comment-meta">'+
+                            '<span class="comment-time">'+getTimeAgo(new Date(c.createdAt))+'</span>'+
+                            '<button class="comment-reply-btn" onclick="window.replyToComment(\''+postId+'\',\''+c.username+'\')">رد</button>'+
+                            '</div>'+
+                            '</div>'+
+                            '</div>'+
+                            // ✅ الردود
+                            (c.replies ? '<div class="comment-replies">'+Object.keys(c.replies).map(function(rKey) {
+                                var r = c.replies[rKey];
+                                return '<div class="comment-reply-item">'+
+                                    '<img src="'+(r.userImage||cImg)+'" class="comment-img" onerror="this.src=\''+cImg+'\'">'+
+                                    '<div class="comment-content">'+
+                                    '<div class="comment-bubble">'+
+                                    '<div class="comment-username">'+(r.username||'مستخدم')+'</div>'+
+                                    '<div class="comment-text">'+formatMentions(r.text||'')+'</div>'+
+                                    '</div>'+
+                                    '<div class="comment-meta"><span class="comment-time">'+getTimeAgo(new Date(r.createdAt))+'</span></div>'+
+                                    '</div>'+
+                                    '</div>';
+                            }).join('')+'</div>' : '')+
+                            '</div>';
                     }).join('');
                 } else { list.innerHTML = ''; }
             });
         }
 
-        // ✅ تنسيق الإشارات @username باللون الأزرق
         function formatMentions(text) {
             if (!text) return '';
             return text.replace(/@(\S+)/g, '<span class="mention">@$1</span>');
         }
 
-        // ✅ استخراج أسماء المستخدمين المُشار إليهم
         function extractMentions(text) {
             if (!text) return [];
             var mentions = [];
             var regex = /@(\S+)/g;
             var match;
-            while ((match = regex.exec(text)) !== null) {
-                mentions.push(match[1]);
-            }
+            while ((match = regex.exec(text)) !== null) { mentions.push(match[1]); }
             return mentions;
         }
 
-        // ✅ إضافة تعليق مع إشعار mention
         window.addComment = async function(postId) {
             if (!currentUser) return;
             var input = document.getElementById('commentInput-'+postId);
@@ -407,25 +447,28 @@
             var btn = document.getElementById('commentBtn-'+postId);
             if (btn) btn.disabled = true;
             try {
-                await database.ref('posts/'+postId+'/comments/'+Date.now()).set({ userId: currentUser.uid, username: currentUser.username || 'مستخدم', userImage: currentUser.profileImage || '', verified: currentUser.verified || false, text: text, createdAt: new Date().toISOString() });
+                await database.ref('posts/'+postId+'/comments/'+Date.now()).set({
+                    userId: currentUser.uid, username: currentUser.username || 'مستخدم',
+                    userImage: currentUser.profileImage || '', verified: currentUser.verified || false,
+                    text: text, createdAt: new Date().toISOString()
+                });
                 var snap = await database.ref('posts/'+postId).once('value');
                 if (snap.exists()) {
                     var post = snap.val();
-                    // ✅ تحديث عداد التعليقات
                     var newCount = (post.commentsCount||0) + 1;
                     await database.ref('posts/'+postId).update({ commentsCount: newCount });
                     var countEl = document.getElementById('commentsCount-'+postId);
                     if (countEl) countEl.textContent = newCount;
 
-                    // ✅ إشعار لصاحب المنشور
                     if (post.userId !== currentUser.uid) {
-                        await database.ref('notifications/'+post.userId+'/'+Date.now()).set({ type:'comment', fromUser:currentUser.username, fromUserId:currentUser.uid, postId:postId, text:text.substring(0,100), read:false, createdAt:new Date().toISOString() });
+                        await database.ref('notifications/'+post.userId+'/'+Date.now()).set({
+                            type:'comment', fromUser:currentUser.username, fromUserId:currentUser.uid,
+                            postId:postId, text:text.substring(0,100), read:false, createdAt:new Date().toISOString()
+                        });
                     }
-                    
-                    // ✅ إشعار mention للمستخدمين المُشار إليهم
+
                     var mentionedUsers = extractMentions(text);
                     if (mentionedUsers.length > 0) {
-                        // البحث عن المستخدمين المُشار إليهم في users
                         var usersSnap = await database.ref('users').once('value');
                         if (usersSnap.exists()) {
                             usersSnap.forEach(function(u) {
@@ -445,11 +488,12 @@
             if (btn) btn.disabled = false;
         };
 
-        // ✅ الرد على تعليق مع userId للإشارة
-        window.replyToComment = function(postId, commentId, username, userId) {
+        // ✅ الرد على تعليق
+        window.replyToComment = function(postId, username) {
             var input = document.getElementById('commentInput-'+postId);
             if (input) { input.value = '@'+username+' '; input.focus(); }
-            document.getElementById('comments-'+postId).classList.add('show');
+            var sec = document.getElementById('comments-'+postId);
+            if (!sec.classList.contains('show')) sec.classList.add('show');
         };
 
         window.sharePostAsImage = async function(postId) {
@@ -481,8 +525,8 @@
         document.getElementById('fabBtn').addEventListener('click', window.openAddPostModal);
         document.getElementById('closeModalBtn').addEventListener('click', window.closeAddPostModal);
         document.getElementById('cancelPostBtn').addEventListener('click', window.closeAddPostModal);
-        document.getElementById('logoutBtn').addEventListener('click', function(e) { e.preventDefault(); auth.signOut().then(function() { localStorage.removeItem('currentUser'); window.location.href='index.html'; }); });
+        document.getElementById('logoutBtn').addEventListener('click', function(e) { e.preventDefault(); auth.signOut().then(function() { localStorage.removeItem('currentUser'); window.location.href='../index.html'; }); });
         document.getElementById('successToast').addEventListener('click', function(e) { if (e.target===this) window.closeSuccessToast(); });
     </script>
 </body>
-        </html>
+</html>
